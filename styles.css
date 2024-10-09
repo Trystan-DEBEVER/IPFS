@@ -1,0 +1,46 @@
+body {
+    background-color: #121212; /* Couleur de fond sombre */
+    color: #e0e0e0; /* Couleur de texte claire */
+    font-family: Arial, sans-serif; /* Police de caractère */
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #f1f1f1; /* Couleur des titres */
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #1e1e1e; /* Fond de la boîte */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+button {
+    background-color: #6200ea; /* Couleur de fond des boutons */
+    color: white; /* Couleur du texte des boutons */
+    border: none; /* Pas de bordure */
+    padding: 10px 20px; /* Espacement intérieur */
+    border-radius: 5px; /* Coins arrondis */
+    cursor: pointer; /* Curseur en forme de main */
+    transition: background-color 0.3s, transform 0.3s; /* Animation au survol */
+    margin: 10px; /* Marge autour des boutons */
+}
+
+button:hover {
+    background-color: #3700b3; /* Couleur au survol */
+    transform: scale(1.05); /* Agrandissement au survol */
+}
+
+#fileContent {
+    margin-top: 20px; /* Espace au-dessus du contenu du fichier */
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #2a2a2a; /* Fond pour le contenu */
+    color: #ffffff; /* Couleur du texte du contenu */
+    overflow: auto; /* Permet le défilement si nécessaire */
+}
