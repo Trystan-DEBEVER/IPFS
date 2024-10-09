@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import/Export Interface (JavaScript)</title>
+    <script src="https://unpkg.com/ipfs/dist/index.min.js"></script>
+    <style>
+        body {
+            background-color: #121212; /* Couleur de fond sombre */
+            color: #e0e0e0; /* Couleur de texte claire */
+            font-family: Arial, sans-serif; /* Police de caractère */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+        text-align: center;
+        color: #f1f1f1; /* Couleur des titres */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #1e1e1e; /* Fond de la boîte */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background-color: #6200ea; /* Couleur de fond des boutons */
+            color: white; /* Couleur du texte des boutons */
+            border: none; /* Pas de bordure */
+            padding: 10px 20px; /* Espacement intérieur */
+            border-radius: 5px; /* Coins arrondis */
+            cursor: pointer; /* Curseur en forme de main */
+            transition: background-color 0.3s, transform 0.3s; /* Animation au survol */
+            margin: 10px; /* Marge autour des boutons */
+        }
+
+        button:hover {
+            background-color: #3700b3; /* Couleur au survol */
+            transform: scale(1.05); /* Agrandissement au survol */
+        }
+        
+        #cidDisplay {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+        #fileContent {
+            margin-top: 20px;
+            white-space: pre-wrap; /* Preserve whitespace */
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 80%;
+            max-height: 300px;
+            overflow-y: auto; /* Enable scrolling */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Importer / Exporter (JavaScript)</h1>
+    <button id="importButton">Importer</button>
+    <button id="exportButton">Exporter</button>
+    <div id="cidDisplay"></div>
+    <div id="fileContent"></div>
+
+    <script>
+        const { create } = window.Ipfs;
+
+        let ipfs;
+
+        async function initIpfs() {
+            ipfs = await create();
+            console.log('IPFS initialisé');
+        }
+
+        async function importData() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.onchange = async (event) => {
+                const file = event.target.files[0];
+                const { cid } = await ipfs.add(file);
+                document.getElementById('cidDisplay').innerText = `CID : ${cid.toString()}`;
+                console.log(`Fichier importé avec CID : ${cid.toString()}`);
+            };
+            fileInput.click();
+        }
+
+        async function exportData() {
+    const cid = prompt("Veuillez entrer le CID du document à exporter :");
+    if (cid) {
+        try {
+            const stream = ipfs.cat(cid);
+            let data = [];
+
+            // Collecte les données à partir du flux
+            for await (const chunk of stream) {
+                data.push(chunk);
+            }
+
+            // Convertir les données collectées en Uint8Array
+            const fileData = new Uint8Array(Buffer.concat(data));
+
+            // Détermine le type de fichier en utilisant une méthode simple
+            const fileType = cid.split('.').pop().toLowerCase(); // S'assurer que l'extension est en minuscules
+
+            // Crée un Blob en fonction du type de fichier
+            let blob;
+            if (fileType === 'pdf') {
+                blob = new Blob([fileData], { type: 'application/pdf' });
+            } else if (fileType === 'png') {
+                blob = new Blob([fileData], { type: 'image/png' });
+            } else if (fileType === 'docx') {
+                blob = new Blob([fileData], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            } else {
+                alert("Type de fichier non pris en charge.");
+                return; // Sortir de la fonction si le type de fichier n'est pas supporté
+            }
+
+            // Crée une URL d'objet pour le Blob et déclenche le téléchargement
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `document.${fileType}`; // Nom de fichier avec extension appropriée
+            document.body.appendChild(a);
+            a.click(); // Simule un clic pour déclencher le téléchargement
+            document.body.removeChild(a); // Retire le lien du document
+
+            // Libération de l'URL
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Erreur lors de l'exportation : ", error);
+            alert("Une erreur s'est produite lors de l'exportation du fichier. Vérifiez le CID et réessayez.");
+        }
+    } else {
+        alert("Aucun CID fourni.");
+    }
+}
+
+
+        document.getElementById("importButton").addEventListener("click", importData);
+        document.getElementById("exportButton").addEventListener("click", exportData);
+
+        initIpfs();
+    </script>
+
+</body>
+</html>
