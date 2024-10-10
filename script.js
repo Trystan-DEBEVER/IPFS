@@ -1,4 +1,5 @@
 let ipfs;
+const fileTypeMap = {}; // Map pour stocker le CID et son type MIME associé
 
 async function initIPFS() {
     // Initialiser IPFS
@@ -20,7 +21,10 @@ async function importData() {
         if (file) {
             const addedFile = await ipfs.add(file);
             const cid = addedFile.path; // Récupère le CID
-            
+
+            // Stocker le type MIME dans le map
+            fileTypeMap[cid] = file.type;
+
             // Affiche le CID sur la page
             document.getElementById('cidDisplay').innerText = `CID importé : ${cid}`;
             document.getElementById('fileContent').innerHTML = ''; // Efface le contenu précédent
@@ -36,7 +40,7 @@ async function exportData() {
     if (cid) {
         try {
             const stream = ipfs.cat(cid);
-            let data = [];
+            const data = [];
 
             // Collecte les données à partir du flux
             for await (const chunk of stream) {
@@ -44,17 +48,15 @@ async function exportData() {
             }
 
             // Convertir les données collectées en Uint8Array
-            const fileData = new Uint8Array(Buffer.concat(data));
+            const fileData = new Uint8Array(data.reduce((acc, curr) => [...acc, ...curr], []));
 
-            // Détermine le type de fichier en utilisant une méthode simple
-            const fileType = cid.split('.').pop().toLowerCase(); // S'assurer que l'extension est en minuscules
+            // Récupère le type MIME du fichier à partir du map
+            const fileType = fileTypeMap[cid];
 
-            // Crée un Blob en fonction du type de fichier
-            let blob;
-            if (fileType === 'pdf') {
-                blob = new Blob([fileData], { type: 'application/pdf' });
+            if (fileType === 'application/pdf') {
+                const blob = new Blob([fileData], { type: fileType });
                 const url = URL.createObjectURL(blob);
-                
+
                 // Créer un iframe pour la prévisualisation du PDF
                 const iframe = document.createElement('iframe');
                 iframe.style.width = '100%';
@@ -64,8 +66,8 @@ async function exportData() {
                 // Efface le contenu précédent et affiche l'iframe
                 document.getElementById('fileContent').innerHTML = ''; 
                 document.getElementById('fileContent').appendChild(iframe);
-            } else if (fileType === 'png') {
-                blob = new Blob([fileData], { type: 'image/png' });
+            } else if (fileType === 'image/png') {
+                const blob = new Blob([fileData], { type: fileType });
                 const url = URL.createObjectURL(blob);
                 const img = document.createElement('img');
                 img.src = url;
@@ -74,12 +76,12 @@ async function exportData() {
                 // Efface le contenu précédent et affiche l'image
                 document.getElementById('fileContent').innerHTML = ''; 
                 document.getElementById('fileContent').appendChild(img);
-            } else if (fileType === 'docx') {
-                blob = new Blob([fileData], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                const blob = new Blob([fileData], { type: fileType });
                 const url = URL.createObjectURL(blob);
                 const downloadLink = document.createElement('a');
                 downloadLink.href = url;
-                downloadLink.download = `document.${fileType}`;
+                downloadLink.download = `document.docx`;
                 downloadLink.innerText = 'Cliquez ici pour télécharger le fichier Word.';
                 
                 // Efface le contenu précédent et affiche le lien de téléchargement
